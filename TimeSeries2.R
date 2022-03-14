@@ -14,3 +14,4 @@ dat_m["year_"] <- dat_m$Year %>% substr(1,4) %>% as.numeric()
 
 #plot the raw data 
 plot.default(dat_m$year_, dat_m$Area, type = "l")
+
