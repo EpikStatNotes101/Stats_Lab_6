@@ -3,9 +3,10 @@ library(ggplot2)
 library(tidyverse)
 library(lattice)
 library(pROC)
+library(caret)
 
 getwd()
-dat <- read_csv("./dataset/bdiag.csv")
+dat <- read.csv("./dataset/bdiag.csv")
 
 dat['diag_'] <- as.numeric(dat[c('diagnosis')] == 'M')
 #View(dat)
@@ -68,3 +69,25 @@ pred_y = predict.glm(object = model, newdata = test_dat, type = "response")
 roc_curve <- roc(test_dat$diag_ ~ pred_y, plot = TRUE, print.auc = TRUE, 
                  legacy.axes = TRUE)
 
+#get best threshold 
+predictions = prediction(pred_y, test_dat$diag_)
+
+sens <- data.frame(x=unlist(performance(predictions, "sens")@x.values), 
+                   y=unlist(performance(predictions, "sens")@y.values))
+spec <- data.frame(x=unlist(performance(predictions, "spec")@x.values), 
+                   y=unlist(performance(predictions, "spec")@y.values))
+
+sens %>% ggplot(aes(x,y)) + 
+  geom_line() + 
+  geom_line(data=spec, aes(x,y,col="red")) +
+  scale_y_continuous(sec.axis = sec_axis(~., name = "Specificity")) +
+  labs(x='Cutoff', y="Sensitivity") +
+  theme(axis.title.y.right = element_text(colour = "red"), legend.position="none") 
+
+sens = cbind(unlist(performance(predictions, "sens")@x.values), unlist(performance(predictions, "sens")@y.values))
+spec = cbind(unlist(performance(predictions, "spec")@x.values), unlist(performance(predictions, "spec")@y.values))
+thresh = sens[which.min(apply(sens, 1, function(x) min(colSums(abs(t(spec) - x))))), 1]
+thresh
+
+#get confusion matrix
+confusionMatrix(as.factor(as.double(pred_y>thresh)),as.factor(test_dat$diag_))

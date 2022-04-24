@@ -3,6 +3,7 @@ library(ggplot2)
 library(tidyverse)
 library(readxl)
 library(tseries)
+library(ggpubr)
 
 #import 
 getwd()
@@ -17,11 +18,11 @@ dat_m = dat_m[c("year_", "Area")]
 #plot the raw data 
 plot.default(dat_m$year_, dat_m$Area, type = "l")
 
-period = 5
+period = 7
 #ma 7 day (trend)
 for (i in 1:(nrow(dat_m) - period + 1))
 {
-  dat_m[i + period - 1, "MA_7"] = mean(dat_m$Area[i:(i + period - 1)])
+  dat_m[i + period - 1 , "MA_7"] = mean(dat_m$Area[i:(i + period - 1)])
 }
 #row.names(dat_m) = dat_m$year_
 View(dat_m)
@@ -43,3 +44,8 @@ adf.test(I_component)
 #ACF plot
 acf(I_component)
 pacf(I_component)
+
+#normality test
+ggdensity(I_component)
+ggqqplot(I_component)
+shapiro.test(I_component)
